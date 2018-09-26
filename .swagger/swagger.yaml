@@ -1,0 +1,109 @@
+openapi: '3.0.0'
+info:
+  version: 1.0.0
+  title: CSV Import Module
+  contact:
+    name: Semen Kotliarenko
+    email: semako@me.com
+servers:
+  - url: http://127.0.0.1:8888
+    description: Local Env
+paths:
+  /csv/import:
+    post:
+      summary: Import CSV file
+      tags:
+        - CSV
+      requestBody:
+        $ref: '#/components/requestBodies/CsvFileImport'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/Error'
+components:
+  responses:
+    Success:
+      content:
+        application/json:
+          schema:
+            type: object
+            description: Imported and mapped
+            required:
+              - data
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommonModel'
+    Error:
+      content:
+        application/json:
+          schema:
+            type: object
+            description: Bad request, invalid class or invalid mappings
+            required:
+              - error
+            properties:
+              error:
+                description: Error description
+                required:
+                  - status
+                  - code
+                  - message
+                properties:
+                  status:
+                    description: HTTP Status Code
+                    type: integer
+                    format: int64
+                  code:
+                    allOf:
+                      - $ref: '#/components/schemas/ErrorEnum'
+                    type: string
+                  message:
+                    description: Short message for debug purposes
+                    type: string
+  requestBodies:
+    CsvFileImport:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - csv
+              - map_to
+            properties:
+              csv:
+                description: A file to be uploaded
+                type: string
+                format: binary
+              map_to:
+                description: Imported file must be mapped to this model
+                type: string
+              mappings:
+                type: array
+                nullable: true
+                items:
+                  type: object
+                  required:
+                    - map_from
+                    - map_to
+                  properties:
+                    map_from:
+                      description: Map this column name
+                      type: string
+                    map_to:
+                      description: Map to this property of Model
+                      type: string
+  schemas:
+    ErrorEnum:
+      description: Internal error code
+      type: string
+      enum:
+        - CSV_INVALID
+        - MAP_MODEL_NOT_FOUND
+        - MAP_MODEL_NOT_PASSED
+        - MAPPINGS_INVALID
+    CommonModel:
+      type: object
