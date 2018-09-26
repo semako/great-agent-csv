@@ -1,0 +1,31 @@
+version: '3.2'
+
+services:
+  data:
+    container_name: csv-data
+    image: debian:9
+    restart: always
+    volumes:
+      - ./:/app/csv
+    entrypoint: tail -f /dev/null
+  nginx:
+    container_name: csv-nginx
+    image: nginx:1.15.2
+    restart: always
+    ports:
+      - '8888:80'
+    volumes:
+      - ./:/app/csv
+      - ./.docker/nginx/vhost.conf:/etc/nginx/conf.d/vhost.conf
+  app:
+    container_name: csv-app
+    restart: always
+    build:
+      context: ./.docker/php
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/app/csv
+    expose:
+      - 9000
+    links:
+      - nginx
